@@ -1,0 +1,47 @@
+version: '3'
+
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    hostname: node1
+    ports:
+      - 5672:5672
+      - 15672:15672
+    volumes:
+      - rabbitmq:/var/lib/rabbitmq
+  
+  filebeat:
+    image: elastic/filebeat:8.5.2
+    container_name: filebeat
+    depends_on:
+      - elasticsearch
+    volumes:
+      - filebeat:/usr/share/filebeat/data
+      - ./filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - /Users/kevinglare/projects/hardcode/microservices/ads-service/log:/var/log/ads:ro
+      - /Users/kevinglare/projects/hardcode/microservices/geocoder-service/log:/var/log/geocoder:ro
+
+  elasticsearch:
+    image: elastic/elasticsearch:8.5.2
+    container_name: elasticsearch
+    volumes:
+      - elasticsearch:/usr/share/elasticsearch/data
+      - /Users/kevinglare/projects/hardcode/microservices/ads-infra/elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+    ports:
+      - 9200:9200
+
+  kibana:
+    image: elastic/kibana:8.5.2
+    container_name: kibana
+    depends_on:
+      - elasticsearch
+    environment:
+      ELEASTICSEARCH_HOSTS: http://elasticsearch:9200
+    ports:
+      - 5601:5601
+
+volumes:
+  rabbitmq:
+  filebeat:
+  elasticsearch:
