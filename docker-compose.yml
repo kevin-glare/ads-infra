@@ -15,7 +15,7 @@ services:
     image: elastic/filebeat:8.5.2
     container_name: filebeat
     depends_on:
-      - elasticsearch
+      - logstash
     volumes:
       - filebeat:/usr/share/filebeat/data
       - ./filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
@@ -25,9 +25,11 @@ services:
   elasticsearch:
     image: elastic/elasticsearch:8.5.2
     container_name: elasticsearch
+    environment:
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
     volumes:
       - elasticsearch:/usr/share/elasticsearch/data
-      - /Users/kevinglare/projects/hardcode/microservices/ads-infra/elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+      - ./elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
     ports:
       - 9200:9200
 
@@ -41,7 +43,18 @@ services:
     ports:
       - 5601:5601
 
+  logstash:
+    image: elastic/logstash:8.5.2
+    container_name: logstash
+    depends_on:
+      - elasticsearch
+    ports:
+      - 5044:5044
+    volumes:
+    - ./logstash:/usr/share/logstash/pipeline:ro
+
 volumes:
   rabbitmq:
   filebeat:
   elasticsearch:
+  logstash:
